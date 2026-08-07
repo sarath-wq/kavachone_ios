@@ -1,23 +1,23 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
-import 'core/theme/theme_provider.dart';
-import 'core/utils/local_storage.dart';
-import 'providers/auth_provider.dart';
-import 'providers/scan_provider.dart';
-import 'providers/language_provider.dart';
-import 'screens/splash/splash_screen.dart';
-import 'screens/onboarding/onboarding_screen.dart';
-import 'screens/terms/terms_accept_screen.dart';
-import 'screens/permissions/permissions_screen.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/dashboard/dashboard_screen.dart';
-import 'screens/check/check_call_screen.dart';
-import 'screens/scan/scan_qr_screen.dart';
-import 'screens/scan/scan_file_screen.dart';
-import 'screens/chat/kavach_bot_screen.dart';
-import 'screens/privacy/privacy_policy_screen.dart';
+import 'package:kavach_app/core/theme/app_theme.dart';
+import 'package:kavach_app/core/theme/theme_provider.dart';
+import 'package:kavach_app/core/utils/local_storage.dart';
+import 'package:kavach_app/providers/auth_provider.dart';
+import 'package:kavach_app/providers/scan_provider.dart';
+import 'package:kavach_app/providers/language_provider.dart';
+import 'package:kavach_app/screens/splash/splash_screen.dart';
+import 'package:kavach_app/screens/onboarding/onboarding_screen.dart';
+import 'package:kavach_app/screens/terms/terms_accept_screen.dart';
+import 'package:kavach_app/screens/permissions/permissions_screen.dart';
+import 'package:kavach_app/screens/auth/login_screen.dart';
+import 'package:kavach_app/screens/dashboard/dashboard_screen.dart';
+import 'package:kavach_app/screens/check/check_call_screen.dart';
+import 'package:kavach_app/screens/scan/scan_qr_screen.dart';
+import 'package:kavach_app/screens/scan/scan_file_screen.dart';
+import 'package:kavach_app/screens/chat/kavach_bot_screen.dart';
+import 'package:kavach_app/screens/privacy/privacy_policy_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -108,13 +108,13 @@ class KavachApp extends StatelessWidget {
         '/onboarding': (context) => const OnboardingScreen(),
         '/terms-accept': (context) => const TermsAcceptScreen(),
         '/permissions': (context) => const PermissionsScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
-        '/check-call': (context) => const CheckCallScreen(),
-        '/scan-qr': (context) => const ScanQrScreen(),
-        '/scan-file': (context) => const ScanFileScreen(),
-        '/chat': (context) => const KavachBotScreen(),
-        '/privacy': (context) => const PrivacyPolicyScreen(),
+        '/login': (context) => LoginScreen(),
+        '/dashboard': (context) => DashboardScreen(),
+        '/check-call': (context) => CheckCallScreen(),
+        '/scan-qr': (context) => ScanQrScreen(),
+        '/scan-file': (context) => ScanFileScreen(),
+        '/chat': (context) => KavachBotScreen(),
+        '/privacy': (context) => PrivacyPolicyScreen(),
       },
     );
   }
