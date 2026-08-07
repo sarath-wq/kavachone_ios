@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:kavach_app/providers/auth_provider.dart';
-import 'package:kavach_app/services/api_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 
 class LoginScreen extends StatefulWidget {
