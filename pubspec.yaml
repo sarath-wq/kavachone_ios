@@ -1,0 +1,43 @@
+name: kavach_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.234.0+1234
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.10.0
+  cupertino_icons: ^1.0.8
+  http: ^1.6.0
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^10.3.1
+  url_launcher: ^6.3.2
+  file_picker: 8.1.7
+  mobile_scanner: ^7.2.0
+  crypto: ^3.0.7
+  google_fonts: ^6.3.2
+  archive: ^4.0.9
+  share_plus: ^12.0.2
+  sms_autofill: ^2.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/kavachbot_app_icon.jpg"
