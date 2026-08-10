@@ -6,51 +6,55 @@ on:
       build_name:
         description: 'App Version'
         required: false
-        default: '1.234'
+        default: '1.236'
       build_number:
         description: 'Build Number'
         required: false
-        default: '1234'
+        default: '1236'
 
 jobs:
   build-ios:
-    name: Build iOS IPA
+    name: Build React Capacitor iOS IPA
     runs-on: macos-14
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter SDK
-        uses: subosito/flutter-action@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          channel: 'stable'
-          flutter-version: '3.32.4'
-          cache: true
+          node-version: '20'
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
-
-      - name: CocoaPods Install
-        working-directory: ios
-        run: pod install
-
-      - name: Build iOS App (Release, no code signing)
+      - name: Install Frontend Dependencies & Build React App
         run: |
-          flutter build ios \
-            --release \
-            --no-codesign \
-            --no-tree-shake-icons
+          cd frontend
+          npm install
+          npm run build
+          npx cap sync ios
 
-      - name: Package .app into .ipa for Sideloadly
+      - name: Build Capacitor React iOS App (Release, no code signing)
+        run: |
+          cd frontend/ios/App
+          xcodebuild -project App.xcodeproj \
+                     -scheme App \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -derivedDataPath build \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     DEVELOPMENT_TEAM=0000000000 \
+                     CODE_SIGN_IDENTITY=""
+
+      - name: Package React Capacitor .app into .ipa for Sideloadly
         run: |
           mkdir -p Payload
-          cp -R build/ios/iphoneos/Runner.app Payload/
-          zip -r KavachOne_1.234_Release.ipa Payload/
+          cp -R frontend/ios/App/build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -r KavachOne_1.236_Release.ipa Payload/
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KavachOne_1.234_Release_IPA
-          path: KavachOne_1.234_Release.ipa
+          name: KavachOne_1.236_Release_IPA
+          path: KavachOne_1.236_Release.ipa
           retention-days: 14

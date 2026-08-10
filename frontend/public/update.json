@@ -1,0 +1,8 @@
+{
+  "versionCode": 1233,
+  "versionName": "1.233",
+  "playStoreUrl": "market://details?id=com.digikavach.kavach_app",
+  "webPlayStoreUrl": "https://play.google.com/store/apps/details?id=com.digikavach.kavach_app",
+  "downloadUrl": "https://s3.ap-south-1.amazonaws.com/app.digikavach.net/releases/KavachOne-v1.233-release.apk",
+  "releaseNotes": "Official Release v1.233: DigiKavach KavachOne security suite with multi-lingual threat inspection, real-time phishing detection, and DPDP Act 2023 compliance."
+}

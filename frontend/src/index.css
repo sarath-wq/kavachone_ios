@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
+/* Global Reset for Zero White Gaps */
+html, body, #root {
+  background-color: #f8fafc !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+:root {
+  --font-title: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --bg-dark: #0a0c10;
+  --bg-card: rgba(22, 28, 36, 0.65);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  
+  --primary: #e8896a;
+  --primary-hover: #d27254;
+  --accent: #1976d2;
+  
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
+  --text-muted: #9ca3af;
+  --text-light: #f3f4f6;
+
+  /* Fluid Typography Engine */
+  --fs-xs: clamp(0.65rem, 1vw + 0.4rem, 0.78rem);
+  --fs-sm: clamp(0.75rem, 1.2vw + 0.45rem, 0.88rem);
+  --fs-base: clamp(0.85rem, 1.5vw + 0.5rem, 1.05rem);
+  --fs-md: clamp(1rem, 2vw + 0.55rem, 1.3rem);
+  --fs-lg: clamp(1.25rem, 2.5vw + 0.6rem, 1.75rem);
+  --fs-xl: clamp(1.6rem, 3.5vw + 0.7rem, 2.4rem);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box !important;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 600;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Dynamic Viewport Shell - Outer Container */
+.app-viewport-shell {
+  width: 100% !important;
+  min-height: 100dvh !important;
+  background: #f8fafc !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Mobile Container Frame - Default 100% on phone screens */
+.app-container-frame {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  background-color: #f8fafc !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  position: relative !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  margin: 0 auto !important;
+}
+
+/* Desktop & Tablet Mobile Phone View Mockup (screen width >= 500px) */
+@media screen and (min-width: 500px) {
+  .app-viewport-shell {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #07152b 0%, #03142c 100%) !important;
+    padding: 24px 0 !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+  }
+  .app-container-frame {
+    width: 100% !important;
+    max-width: 440px !important;
+    height: 92vh !important;
+    height: 92dvh !important;
+    max-height: 880px !important;
+    min-height: 620px !important;
+    border-radius: 28px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background-color: #f8fafc !important;
+  }
+}
+
+/* Glassmorphism & Card Utilities */
+.glass-panel, .card, .dashboard-card, .cert-card, .menu-bar, .footer-box {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+/* Custom buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #b86246 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: var(--font-title);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(232, 137, 106, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Micro-animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Ensure images & canvases fill containers without white space */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
