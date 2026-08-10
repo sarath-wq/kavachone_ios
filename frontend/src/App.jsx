@@ -3254,6 +3254,33 @@ export default function App() {
       setScanError("");
       setCameraPermissionState("granted");
 
+      // Attempt Capacitor Native Camera Plugin first (for native iOS / Android)
+      try {
+        const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera
+        });
+        if (image && image.dataUrl) {
+          setFilePreview(image.dataUrl);
+          setScanSource("Camera_Capture.jpg");
+          setScanContent(image.dataUrl);
+          try {
+            const res = await fetch(image.dataUrl);
+            const blob = await res.blob();
+            const fileObj = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+            setSelectedFile(fileObj);
+          } catch (e) {
+            console.warn("Blob conversion error:", e);
+          }
+          return;
+        }
+      } catch (capErr) {
+        console.warn("Capacitor camera error, falling back to WebRTC getUserMedia:", capErr);
+      }
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         let stream = null;
         try {
@@ -3291,6 +3318,38 @@ export default function App() {
         const fileInput = document.getElementById("photo-input-file");
         if (fileInput) fileInput.click();
       }
+    };
+
+    const handlePickPhotoFromGallery = async () => {
+      setScanError("");
+      try {
+        const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Photos
+        });
+        if (image && image.dataUrl) {
+          setFilePreview(image.dataUrl);
+          setScanSource("Photo_Library.jpg");
+          setScanContent(image.dataUrl);
+          try {
+            const res = await fetch(image.dataUrl);
+            const blob = await res.blob();
+            const fileObj = new File([blob], "photo_library.jpg", { type: "image/jpeg" });
+            setSelectedFile(fileObj);
+          } catch (e) {
+            console.warn("Blob conversion error:", e);
+          }
+          return;
+        }
+      } catch (capErr) {
+        console.warn("Capacitor photo gallery pick error:", capErr);
+      }
+
+      const fileInput = document.getElementById("photo-input-file");
+      if (fileInput) fileInput.click();
     };
 
 
@@ -7739,7 +7798,11 @@ if (currentPage === "permissions") {
 
   /* @__PURE__ */ React.createElement("strong", { style: { fontSize: "0.8rem", color: "#475569" } }, t("uploadScanPhoto")),
 
-  /* @__PURE__ */ React.createElement("input", { id: "photo-input-file", type: "file", accept: "image/*", onChange: handleFileChange, style: { fontSize: "0.8rem", color: "#475569", width: "100%", maxWidth: "240px" } }), /* @__PURE__ */ React.createElement("input", { id: "photo-input-camera-native", type: "file", accept: "image/*", capture: "environment", onChange: handleFileChange, style: { display: "none" } }),
+  /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center", marginBottom: "8px" } },
+    /* @__PURE__ */ React.createElement("button", { type: "button", onClick: handlePickPhotoFromGallery, style: { fontSize: "0.8rem", padding: "8px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", backgroundColor: "#ffffff", color: "#0f172a", cursor: "pointer", fontWeight: "600", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" } }, "🖼️ Select Photo from Gallery"),
+    /* @__PURE__ */ React.createElement("input", { id: "photo-input-file", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: "none" } }),
+    /* @__PURE__ */ React.createElement("input", { id: "photo-input-camera-native", type: "file", accept: "image/*", capture: "environment", onChange: handleFileChange, style: { display: "none" } })
+  ),
 
   filePreview && /* @__PURE__ */ React.createElement("div", { style: { marginTop: "10px", width: "100%", display: "flex", flexDirection: "column", alignItems: "center" } },
 
@@ -7761,8 +7824,8 @@ if (currentPage === "permissions") {
     ) : /* @__PURE__ */ React.createElement(React.Fragment, null,
       cameraError && /* @__PURE__ */ React.createElement("div", { style: { color: "#dc2626", fontSize: "0.75rem", marginBottom: "6px", fontWeight: "500" } }, cameraError),
       /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" } },
-      /* @__PURE__ */ React.createElement("button", { type: "button", onClick: handleRequestCamera, style: { fontSize: "0.8rem", padding: "8px 14px", borderRadius: "8px", border: "none", backgroundColor: "#008ca8", color: "#ffffff", cursor: "pointer", fontWeight: "600", boxShadow: "0 2px 4px rgba(0,140,168,0.3)" } }, "🎥 Live Camera Stream"),
-      /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => { const inp = document.getElementById("photo-input-camera-native"); if (inp) inp.click(); else handleRequestCamera(); }, style: { fontSize: "0.8rem", padding: "8px 14px", borderRadius: "8px", border: "none", backgroundColor: "#059669", color: "#ffffff", cursor: "pointer", fontWeight: "600", boxShadow: "0 2px 4px rgba(5,150,105,0.3)" } }, "📸 Take Photo (Camera App)")
+      /* @__PURE__ */ React.createElement("button", { type: "button", onClick: handleRequestCamera, style: { fontSize: "0.8rem", padding: "8px 14px", borderRadius: "8px", border: "none", backgroundColor: "#008ca8", color: "#ffffff", cursor: "pointer", fontWeight: "600", boxShadow: "0 2px 4px rgba(0,140,168,0.3)" } }, "📸 Take Photo (Camera App)"),
+      /* @__PURE__ */ React.createElement("button", { type: "button", onClick: handlePickPhotoFromGallery, style: { fontSize: "0.8rem", padding: "8px 14px", borderRadius: "8px", border: "none", backgroundColor: "#059669", color: "#ffffff", cursor: "pointer", fontWeight: "600", boxShadow: "0 2px 4px rgba(5,150,105,0.3)" } }, "🖼️ Select Photo from Gallery")
     )
     )
   )

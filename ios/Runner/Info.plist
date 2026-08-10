@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>KavachOne requires camera access to scan QR codes and capture photos of suspicious messages and documents for threat analysis.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KavachOne requires access to your photo library to select photos and screenshots for scam and threat detection.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>KavachOne requires permission to save security reports and scanned images to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>KavachOne requires microphone access to analyze audio and voice calls for fraud detection.</string>
 </dict>
 </plist>
