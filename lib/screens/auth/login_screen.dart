@@ -13,10 +13,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ApiService _api = ApiService();
 
   // Login Form Controllers
   final _loginIdController = TextEditingController();
   final _loginPasswordController = TextEditingController();
+  final _loginCaptchaController = TextEditingController();
   bool _showLoginPassword = false;
 
   // Register Form Controllers
@@ -24,11 +26,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _regEmailController = TextEditingController();
   final _regMobileController = TextEditingController();
   final _regPasswordController = TextEditingController();
+  final _regCaptchaController = TextEditingController();
   bool _showRegPassword = false;
 
-  // Captcha placeholders (accepted as-is by backend)
-  final String _dummyToken = 'no-captcha';
-  final String _dummyAnswer = '0';
+  // Real Captcha challenge state from backend
+  String _captchaToken = '';
+  String _captchaQuestion = '';
+  bool _isLoadingCaptcha = false;
 
   String _errorMsg = '';
   bool _isLoading = false;
@@ -42,6 +46,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         _errorMsg = '';
       });
     });
+    _fetchCaptcha();
+  }
+
+  Future<void> _fetchCaptcha() async {
+    setState(() {
+      _isLoadingCaptcha = true;
+    });
+    try {
+      final data = await _api.getCaptcha();
+      if (mounted) {
+        setState(() {
+          _captchaToken = data['captcha_token'] ?? '';
+          _captchaQuestion = data['question'] ?? 'What is 1 + 1?';
+          _loginCaptchaController.clear();
+          _regCaptchaController.clear();
+          _isLoadingCaptcha = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _captchaQuestion = 'Security Code Challenge';
+          _isLoadingCaptcha = false;
+        });
+      }
+    }
   }
 
   @override
@@ -49,20 +79,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _tabController.dispose();
     _loginIdController.dispose();
     _loginPasswordController.dispose();
+    _loginCaptchaController.dispose();
     _regNameController.dispose();
     _regEmailController.dispose();
     _regMobileController.dispose();
     _regPasswordController.dispose();
+    _regCaptchaController.dispose();
     super.dispose();
   }
 
   Future<void> _onLogin() async {
     final username = _loginIdController.text.trim();
     final password = _loginPasswordController.text.trim();
+    final captchaAns = _loginCaptchaController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty || captchaAns.isEmpty) {
       setState(() {
-        _errorMsg = 'Please enter your credentials.';
+        _errorMsg = 'Please enter your credentials and Security Code.';
       });
       return;
     }
@@ -74,20 +107,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
-      await auth.login(username, password, _dummyToken, _dummyAnswer);
+      await auth.login(username, password, _captchaToken, captchaAns);
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/dashboard');
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        final msg = e.toString().replaceFirst('Exception: ', '');
-        if (msg.contains('401') || msg.contains('credentials')) {
-          _errorMsg = 'Incorrect credentials. Try again.';
-        } else {
-          _errorMsg = msg;
-        }
-      });
+      _fetchCaptcha(); // Refresh captcha challenge on error
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          final msg = e.toString().replaceFirst('Exception: ', '');
+          if (msg.contains('401') || msg.contains('credentials') || msg.contains('Unauthorized')) {
+            _errorMsg = 'Incorrect username, password, or security code.';
+          } else {
+            _errorMsg = msg;
+          }
+        });
+      }
     }
   }
 
@@ -96,10 +132,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final email = _regEmailController.text.trim();
     final mobile = _regMobileController.text.trim();
     final password = _regPasswordController.text.trim();
+    final captchaAns = _regCaptchaController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty || captchaAns.isEmpty) {
       setState(() {
-        _errorMsg = 'Please fill in all required fields.';
+        _errorMsg = 'Please fill in all required fields and Security Code.';
       });
       return;
     }
@@ -118,7 +155,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
-      // Derive a safe username from the email
       final username = email.split('@')[0].replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
       
       await auth.register(
@@ -127,23 +163,26 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         email: email,
         password: password,
         mobileNumber: mobile.isEmpty ? null : mobile,
-        captchaToken: _dummyToken,
-        captchaAnswer: _dummyAnswer,
+        captchaToken: _captchaToken,
+        captchaAnswer: captchaAns,
       );
       
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/onboarding');
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        final msg = e.toString().replaceFirst('Exception: ', '');
-        if (msg.contains('409')) {
-          _errorMsg = 'Email already registered.';
-        } else {
-          _errorMsg = msg;
-        }
-      });
+      _fetchCaptcha(); // Refresh captcha on error
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          final msg = e.toString().replaceFirst('Exception: ', '');
+          if (msg.contains('409')) {
+            _errorMsg = 'Email already registered.';
+          } else {
+            _errorMsg = msg;
+          }
+        });
+      }
     }
   }
 
@@ -153,6 +192,71 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const ForgotPasswordSheet(),
+    );
+  }
+
+  Widget _buildCaptchaWidget(TextEditingController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? Colors.white12 : const Color(0xFFCBD5E1),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.shield_outlined,
+                color: Theme.of(context).primaryColor,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _isLoadingCaptcha
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        _captchaQuestion.isNotEmpty
+                            ? _captchaQuestion
+                            : 'Security Code Challenge',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Refresh Captcha',
+                onPressed: _isLoadingCaptcha ? null : _fetchCaptcha,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _tabController.index == 0 ? _onLogin() : _onRegister(),
+          decoration: InputDecoration(
+            labelText: 'Security Code Answer',
+            hintText: 'Enter answer (e.g. 0)',
+            prefixIcon: const Icon(Icons.verified_user_outlined),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
     );
   }
 
@@ -179,19 +283,19 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   // Header Logo
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         'assets/images/kavachbot_app_icon.jpg',
-                        width: 80,
-                        height: 80,
+                        width: 72,
+                        height: 72,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Text(
                           '🛡️',
-                          style: TextStyle(fontSize: 64),
+                          style: TextStyle(fontSize: 56),
                         ),
                       ),
                     ),
@@ -210,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black54, fontSize: 14),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
                   // Tabs
                   Container(
@@ -230,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   if (_errorMsg.isNotEmpty)
                     Container(
@@ -249,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
                   // Tab Forms
                   SizedBox(
-                    height: 360,
+                    height: 490,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -260,19 +364,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             TextField(
                               controller: _loginIdController,
                               textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => _onLogin(),
                               decoration: InputDecoration(
                                 labelText: 'Email or Username',
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 14),
                             TextField(
                               controller: _loginPasswordController,
                               obscureText: !_showLoginPassword,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _onLogin(),
+                              textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outline),
@@ -283,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
@@ -291,6 +393,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 child: const Text('Forgot Password?'),
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            _buildCaptchaWidget(_loginCaptchaController),
                             const Spacer(),
                             ElevatedButton(
                               onPressed: _isLoading ? null : _onLogin,
@@ -298,6 +402,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 ? const CircularProgressIndicator(color: Colors.white) 
                                 : const Text('Login'),
                             ),
+                            const SizedBox(height: 12),
                           ],
                         ),
 
@@ -308,30 +413,27 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             TextField(
                               controller: _regNameController,
                               textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => _onRegister(),
                               decoration: InputDecoration(
                                 labelText: 'Full Name',
                                 prefixIcon: const Icon(Icons.person_outline),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                             TextField(
                               controller: _regEmailController,
                               textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => _onRegister(),
                               decoration: InputDecoration(
                                 labelText: 'Email Address',
                                 prefixIcon: const Icon(Icons.mail_outline),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                             TextField(
                               controller: _regMobileController,
                               keyboardType: TextInputType.phone,
                               textInputAction: TextInputAction.next,
-                              onSubmitted: (_) => _onRegister(),
                               decoration: InputDecoration(
                                 labelText: 'Mobile Number (Optional)',
                                 prefixIcon: const Icon(Icons.phone_outlined),
@@ -349,12 +451,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                             TextField(
                               controller: _regPasswordController,
                               obscureText: !_showRegPassword,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _onRegister(),
+                              textInputAction: TextInputAction.next,
                               decoration: InputDecoration(
                                 labelText: 'Password (min 8 chars)',
                                 prefixIcon: const Icon(Icons.lock_outline),
@@ -365,6 +466,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            _buildCaptchaWidget(_regCaptchaController),
                             const Spacer(),
                             ElevatedButton(
                               onPressed: _isLoading ? null : _onRegister,
@@ -372,6 +475,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 ? const CircularProgressIndicator(color: Colors.white) 
                                 : const Text('Register'),
                             ),
+                            const SizedBox(height: 12),
                           ],
                         ),
                       ],
@@ -612,7 +716,6 @@ class _ForgotPasswordSheetState extends State<ForgotPasswordSheet> with CodeAuto
               child: _sheetLoading ? const CircularProgressIndicator() : const Text('Send Reset OTP'),
             ),
           ] else if (_step == 'otp') ...[
-            // In a real app we receive SMS, but backend returns the OTP code in response for testing
             if (_otpDisplayCode.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(12),
