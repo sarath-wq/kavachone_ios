@@ -3254,33 +3254,6 @@ export default function App() {
       setScanError("");
       setCameraPermissionState("granted");
 
-      // Attempt Capacitor Native Camera Plugin first (for native iOS / Android)
-      try {
-        const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Camera
-        });
-        if (image && image.dataUrl) {
-          setFilePreview(image.dataUrl);
-          setScanSource("Camera_Capture.jpg");
-          setScanContent(image.dataUrl);
-          try {
-            const res = await fetch(image.dataUrl);
-            const blob = await res.blob();
-            const fileObj = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
-            setSelectedFile(fileObj);
-          } catch (e) {
-            console.warn("Blob conversion error:", e);
-          }
-          return;
-        }
-      } catch (capErr) {
-        console.warn("Capacitor camera error, falling back to WebRTC getUserMedia:", capErr);
-      }
-
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         let stream = null;
         try {
@@ -3320,34 +3293,8 @@ export default function App() {
       }
     };
 
-    const handlePickPhotoFromGallery = async () => {
+    const handlePickPhotoFromGallery = () => {
       setScanError("");
-      try {
-        const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Photos
-        });
-        if (image && image.dataUrl) {
-          setFilePreview(image.dataUrl);
-          setScanSource("Photo_Library.jpg");
-          setScanContent(image.dataUrl);
-          try {
-            const res = await fetch(image.dataUrl);
-            const blob = await res.blob();
-            const fileObj = new File([blob], "photo_library.jpg", { type: "image/jpeg" });
-            setSelectedFile(fileObj);
-          } catch (e) {
-            console.warn("Blob conversion error:", e);
-          }
-          return;
-        }
-      } catch (capErr) {
-        console.warn("Capacitor photo gallery pick error:", capErr);
-      }
-
       const fileInput = document.getElementById("photo-input-file");
       if (fileInput) fileInput.click();
     };
