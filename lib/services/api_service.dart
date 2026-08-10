@@ -283,8 +283,11 @@ class ApiService {
     required String sourceIdentifier,
     required String rawContent,
   }) async {
+    final lowerCh = channel.toLowerCase();
+    final safeChannel = (lowerCh == 'whatsapp' || lowerCh == 'call') ? 'sms' : lowerCh;
+
     final response = await _request('POST', '/scans', body: {
-      'channel': channel,
+      'channel': safeChannel,
       'source_identifier': sourceIdentifier,
       'raw_content': rawContent,
     });
