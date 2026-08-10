@@ -26,10 +26,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Frontend Dependencies & Build React App
+      - name: Install Frontend Dependencies & Sync Capacitor
         run: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
           npm run build
           npx cap sync ios
 
@@ -49,7 +49,12 @@ jobs:
       - name: Package React Capacitor .app into .ipa for Sideloadly
         run: |
           mkdir -p Payload
-          cp -R frontend/ios/App/build/Build/Products/Release-iphoneos/App.app Payload/
+          APP_PATH=$(find frontend/ios/App/build -name "App.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find frontend/ios/App -name "*.app" -type d | head -n 1)
+          fi
+          echo "Found App bundle at: $APP_PATH"
+          cp -R "$APP_PATH" Payload/
           zip -r KavachOne_1.236_Release.ipa Payload/
 
       - name: Upload IPA Artifact
