@@ -5,19 +5,17 @@ on:
     inputs:
       build_name:
         description: 'App Version'
-        required: true
+        required: false
         default: '1.234'
       build_number:
         description: 'Build Number'
-        required: true
+        required: false
         default: '1234'
-  push:
-    branches: [ main, master ]
 
 jobs:
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: Checkout repository
@@ -27,34 +25,32 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.32.4'
           cache: true
 
-      - name: Install dependencies
-        run: |
-          flutter doctor -v
-          flutter pub get
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
       - name: CocoaPods Install
-        run: |
-          cd ios
-          pod install --repo-update || true
-          cd ..
+        working-directory: ios
+        run: pod install
 
-      - name: Build iOS App Bundle (Release)
+      - name: Build iOS App (Release, no code signing)
         run: |
-          BUILD_NAME="${{ github.event.inputs.build_name || '1.234' }}"
-          BUILD_NUM="${{ github.event.inputs.build_number || '1234' }}"
-          flutter build ios --release --no-codesign --build-name=$BUILD_NAME --build-number=$BUILD_NUM
+          flutter build ios \
+            --release \
+            --no-codesign \
+            --no-tree-shake-icons
 
-      - name: Package .app into valid .ipa for Sideloadly
+      - name: Package .app into .ipa for Sideloadly
         run: |
           mkdir -p Payload
           cp -R build/ios/iphoneos/Runner.app Payload/
-          zip -r KavachOne_1.234_Release.ipa Payload
+          zip -r KavachOne_1.234_Release.ipa Payload/
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: KavachOne_1.234_Release_IPA
-          path: KavachOne_*_Release.ipa
-          retention-days: 7
+          path: KavachOne_1.234_Release.ipa
+          retention-days: 14
