@@ -117,8 +117,12 @@ class ApiService {
     );
     if ((response.statusCode == 200 || response.statusCode == 201)) {
       final data = json.decode(response.body);
-      await _storage.setAccessToken(data['access_token']);
-      await _storage.setRefreshToken(data['refresh_token']);
+      if (data['access_token'] != null) {
+        await _storage.setAccessToken(data['access_token'].toString());
+      }
+      if (data['refresh_token'] != null) {
+        await _storage.setRefreshToken(data['refresh_token'].toString());
+      }
       return data;
     }
     throw Exception(response.body);
@@ -149,8 +153,12 @@ class ApiService {
     );
     if ((response.statusCode == 200 || response.statusCode == 201)) {
       final data = json.decode(response.body);
-      await _storage.setAccessToken(data['access_token']);
-      await _storage.setRefreshToken(data['refresh_token']);
+      if (data['access_token'] != null) {
+        await _storage.setAccessToken(data['access_token'].toString());
+      }
+      if (data['refresh_token'] != null) {
+        await _storage.setRefreshToken(data['refresh_token'].toString());
+      }
       return data;
     }
     throw Exception(response.body);

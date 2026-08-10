@@ -57,8 +57,10 @@ class LocalStorage {
     return await _readSecure(ApiConstants.tokenKey);
   }
 
-  Future<void> setAccessToken(String token) async {
-    await _writeSecure(ApiConstants.tokenKey, token);
+  Future<void> setAccessToken(String? token) async {
+    if (token != null) {
+      await _writeSecure(ApiConstants.tokenKey, token);
+    }
   }
 
   Future<void> deleteAccessToken() async {
@@ -69,8 +71,10 @@ class LocalStorage {
     return await _readSecure(ApiConstants.refreshKey);
   }
 
-  Future<void> setRefreshToken(String token) async {
-    await _writeSecure(ApiConstants.refreshKey, token);
+  Future<void> setRefreshToken(String? token) async {
+    if (token != null) {
+      await _writeSecure(ApiConstants.refreshKey, token);
+    }
   }
 
   Future<void> deleteRefreshToken() async {
